@@ -1,0 +1,7 @@
+mkdir tastebuddy-webapp
+cd tastebuddy-webapp
+npm init -y 
+cd ..
+npm create vite@latest frontend -- --template react
+cd frontend
+npm install 
