@@ -54,36 +54,19 @@ function IngredientBasedRecipes({ onRecipesFound }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
-    // Add any remaining ingredient in the input
-    if (currentIngredient.trim()) {
-      const newIngredients = currentIngredient
-        .split(',')
-        .map(ing => ing.trim())
-        .filter(ing => ing.length > 0);
-      newIngredients.forEach(handleAddIngredient);
-      setCurrentIngredient('');
-    }
-
     if (ingredients.length === 0) return;
 
-    setLoading(true);
     try {
-      const response = await api.post('/recipes/by-ingredients', {
-        ingredients,
-        includePartialMatches: true,
-        maxAdditionalIngredients: 3
+      setLoading(true);
+      const response = await api.post('/recipes/search-by-ingredients', {
+        ingredients
       });
-
-      if (response.data && response.data.recipes) {
-        onRecipesFound(response.data.recipes);
-      } else {
-        console.error('Invalid response format:', response.data);
-        throw new Error('No recipes found');
+      
+      if (response.data) {
+        onRecipesFound(response.data);
       }
     } catch (error) {
-      console.error('Error finding recipes:', error);
-      onRecipesFound([]);
+      console.error('Error searching recipes:', error);
     } finally {
       setLoading(false);
     }

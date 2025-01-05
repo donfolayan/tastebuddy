@@ -2,7 +2,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
 function Header() {
-  const { currentUser, logout } = useAuth();
+  const { user, logout } = useAuth();
   const navigate = useNavigate();
 
   const handleLogout = async () => {
@@ -19,26 +19,58 @@ function Header() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           <div className="flex items-center">
-            <Link to="/" className="text-2xl font-bold text-primary">
+            <Link to={user ? "/dashboard" : "/"} className="text-2xl font-bold text-primary">
               TasteBuddy
             </Link>
           </div>
 
           <nav className="flex items-center space-x-4">
-            {currentUser ? (
+            {user ? (
               <>
                 <Link
-                  to="/"
+                  to="/dashboard"
                   className="text-text-primary hover:text-primary px-3 py-2 rounded-md text-sm font-medium"
                 >
-                  Home
+                  Dashboard
                 </Link>
-                <button
-                  onClick={handleLogout}
+                <Link
+                  to="/recipes/new"
                   className="text-text-primary hover:text-primary px-3 py-2 rounded-md text-sm font-medium"
                 >
-                  Sign out
-                </button>
+                  Add Recipe
+                </Link>
+                <Link
+                  to="/favorites"
+                  className="text-text-primary hover:text-primary px-3 py-2 rounded-md text-sm font-medium"
+                >
+                  My Favorites
+                </Link>
+                <div className="relative group">
+                  <button
+                    className="flex items-center text-text-primary hover:text-primary px-3 py-2 rounded-md text-sm font-medium"
+                  >
+                    <span>{user.username || user.email.split('@')[0]}</span>
+                    <svg className="ml-1 h-4 w-4" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
+                    </svg>
+                  </button>
+                  <div className="absolute right-0 mt-2 w-48 rounded-md shadow-lg bg-card ring-1 ring-black ring-opacity-5 hidden group-hover:block">
+                    <div className="py-1">
+                      <Link
+                        to="/profile"
+                        className="block px-4 py-2 text-sm text-text-primary hover:bg-background"
+                      >
+                        Profile Settings
+                      </Link>
+                      <button
+                        onClick={handleLogout}
+                        className="block w-full text-left px-4 py-2 text-sm text-text-primary hover:bg-background"
+                      >
+                        Sign out
+                      </button>
+                    </div>
+                  </div>
+                </div>
               </>
             ) : (
               <>

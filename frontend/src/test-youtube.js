@@ -1,6 +1,6 @@
 import fetch from 'node-fetch';
 
-const YOUTUBE_API_KEY = 'AIzaSyCh3-PxMJYXY_Q42rXdPTeNATMlOyxgkww';
+const YOUTUBE_API_KEY = import.meta.env.VITE_YOUTUBE_API_KEY;
 
 async function testYoutubeSearch(query) {
   try {

@@ -16,10 +16,12 @@ function Login() {
     try {
       setError('');
       setLoading(true);
-      await login(email, password);
-      navigate('/');
+      const userData = await login(email, password);
+      if (userData) {
+        navigate('/dashboard', { replace: true });
+      }
     } catch (err) {
-      setError('Failed to sign in');
+      setError(err.response?.data?.error || 'Failed to sign in');
       console.error('Login error:', err);
     } finally {
       setLoading(false);

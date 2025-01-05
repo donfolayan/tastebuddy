@@ -28,6 +28,7 @@ const errorHandler = (err, req, res, next) => {
                 message: err.message
             });
         } else {
+            // Programming or unknown errors: don't leak error details
             console.error('ERROR 💥', err);
             res.status(500).json({
                 status: 'error',

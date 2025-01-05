@@ -123,12 +123,23 @@ function Home() {
       setRecommendationSource('search');
       const response = await api.post('/recipes/search', {
         query,
-        userId: user?.id
+        filters: {
+          page: 1,
+          limit: 20,
+          ...(user?.preferences?.cuisineType && { cuisine: user.preferences.cuisineType })
+        }
       });
-      setRecipes(response.data);
+      
+      if (response.data?.status === 'success') {
+        setRecipes(response.data.data);
+      } else {
+        setError('No recipes found');
+        setRecipes([]);
+      }
     } catch (error) {
       console.error('Search error:', error);
       setError('Failed to search recipes');
+      setRecipes([]);
     } finally {
       setLoading(false);
     }

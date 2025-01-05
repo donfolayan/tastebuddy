@@ -1,16 +1,32 @@
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
-const { pool } = require('../db');
+const pool = require('../config/database');
 
 const authController = {
     // Register a new user
     register: async (req, res) => {
         try {
-            const { username, email, password } = req.body;
+            let { 
+                username, 
+                email, 
+                password,
+                // Optional fields for recommendations
+                dietaryPreferences = [],
+                allergies = [],
+                cookingSkillLevel = null,
+                favoriteCuisines = [],
+                cookingFrequency = null,
+                preferredMealTypes = []
+            } = req.body;
 
             // Validate input
-            if (!username || !email || !password) {
-                return res.status(400).json({ error: 'All fields are required' });
+            if (!email || !password) {
+                return res.status(400).json({ error: 'Email and password are required' });
+            }
+
+            // If username is not provided, generate one from email
+            if (!username) {
+                username = email.split('@')[0];
             }
 
             // Check if user already exists
@@ -27,10 +43,33 @@ const authController = {
             const salt = await bcrypt.genSalt(10);
             const hashedPassword = await bcrypt.hash(password, salt);
 
-            // Create user
+            // Create user with optional fields
             const result = await pool.query(
-                'INSERT INTO users (username, email, password) VALUES ($1, $2, $3) RETURNING id, username, email',
-                [username, email, hashedPassword]
+                `INSERT INTO users (
+                    username, 
+                    email, 
+                    password, 
+                    dietary_preferences,
+                    allergies,
+                    cooking_skill_level,
+                    favorite_cuisines,
+                    cooking_frequency,
+                    preferred_meal_types
+                ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) 
+                RETURNING id, username, email, dietary_preferences, allergies, 
+                          cooking_skill_level, favorite_cuisines, cooking_frequency, 
+                          preferred_meal_types`,
+                [
+                    username, 
+                    email, 
+                    hashedPassword,
+                    dietaryPreferences,
+                    allergies,
+                    cookingSkillLevel,
+                    favoriteCuisines,
+                    cookingFrequency,
+                    preferredMealTypes
+                ]
             );
 
             const user = result.rows[0];
@@ -38,7 +77,7 @@ const authController = {
             // Create token
             const token = jwt.sign(
                 { id: user.id, username: user.username },
-                process.env.JWT_SECRET,
+                process.env.JWT_SECRET || 'your-secret-key',
                 { expiresIn: '30d' }
             );
 
@@ -46,6 +85,12 @@ const authController = {
                 id: user.id,
                 username: user.username,
                 email: user.email,
+                dietaryPreferences: user.dietary_preferences,
+                allergies: user.allergies,
+                cookingSkillLevel: user.cooking_skill_level,
+                favoriteCuisines: user.favorite_cuisines,
+                cookingFrequency: user.cooking_frequency,
+                preferredMealTypes: user.preferred_meal_types,
                 token
             });
         } catch (error) {

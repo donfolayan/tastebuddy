@@ -39,7 +39,7 @@ Before you begin, ensure you have:
 
 1. **Clone the repository**
    ```bash
-   git clone https://github.com/yourusername/tastebuddy.git
+   git clone https://github.com/donfolayan/tastebuddy.git
    cd tastebuddy
    ```
 
@@ -119,7 +119,7 @@ The application will be available at:
 ## Credits 👏
 
 - Backend Development: [@Purpose-Longe](https://github.com/Purpose-Longe)
-- Frontend Design & Development: [Your Name]
+- Frontend Design & Development: [Donald Folayan](https://github.com/donfolayan)
 
 ## License 📄
 

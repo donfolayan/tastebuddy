@@ -1,4 +1,4 @@
-import { createContext, useState, useContext } from 'react';
+import { createContext, useState, useContext, useEffect } from 'react';
 import api from '../services/api';
 
 // Create the context
@@ -16,8 +16,31 @@ export const useAuth = () => {
 // Provider component
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+
+  // Check authentication status when the app loads
+  useEffect(() => {
+    const validateToken = async () => {
+      const token = localStorage.getItem('token');
+      if (token) {
+        try {
+          // Add token to default headers
+          api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+          // Fetch current user data
+          const response = await api.get('/auth/me');
+          setUser(response.data);
+        } catch (error) {
+          console.error('Token validation error:', error);
+          localStorage.removeItem('token');
+          delete api.defaults.headers.common['Authorization'];
+        }
+      }
+      setLoading(false);
+    };
+
+    validateToken();
+  }, []);
 
   const register = async (userData) => {
     try {
@@ -25,8 +48,12 @@ export function AuthProvider({ children }) {
       setError(null);
       console.log('Sending registration data:', userData);
       const response = await api.post('/auth/register', userData);
-      setUser(response.data.user);
-      localStorage.setItem('token', response.data.token);
+      
+      const token = response.data.token;
+      localStorage.setItem('token', token);
+      api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+      
+      setUser(response.data);
       return response.data;
     } catch (error) {
       console.error('Registration error:', error);
@@ -39,29 +66,35 @@ export function AuthProvider({ children }) {
 
   const login = async (email, password) => {
     try {
+      setLoading(true);
+      setError(null);
       const response = await api.post('/auth/login', {
         email,
         password
       });
 
-      // Log response for debugging (remove in production)
-      console.log('Login response:', response);
-
-      if (response.data.token) {
-        localStorage.setItem('token', response.data.token);
-        setUser(response.data.user);
-        return true;
+      if (response.data && response.data.token) {
+        const token = response.data.token;
+        localStorage.setItem('token', token);
+        api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+        
+        setUser(response.data);
+        return response.data;
       }
-      return false;
+      throw new Error('Invalid response from server');
     } catch (error) {
       console.error('Login error:', error);
-      throw error.response?.data?.error || 'Login failed';
+      setError(error.response?.data?.error || 'Login failed');
+      throw error;
+    } finally {
+      setLoading(false);
     }
   };
 
   const logout = () => {
     setUser(null);
     localStorage.removeItem('token');
+    delete api.defaults.headers.common['Authorization'];
   };
 
   const value = {
@@ -72,6 +105,11 @@ export function AuthProvider({ children }) {
     login,
     logout
   };
+
+  // Show loading state while checking authentication
+  if (loading) {
+    return <div>Loading...</div>;
+  }
 
   return (
     <AuthContext.Provider value={value}>
